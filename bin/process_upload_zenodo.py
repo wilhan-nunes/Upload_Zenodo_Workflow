@@ -69,12 +69,14 @@ def main():
         # Uploading the file
         with open(path, "rb") as fp:
             r = requests.put(f'{bucket_url}/{path}', data=fp, params=params)
+            r.raise_for_status()
 
         # Sending METADATA to the server
         r = requests.put(f'https://zenodo.org/api/deposit/depositions/{deposition_id}',
                          params={'access_token': ACCESS_TOKEN},
                          data=json.dumps(data),
                          headers=headers)
+        r.raise_for_status()
 
     # logging the results to make it easier to debug
     with open(args.output_deposition_log, 'w') as logf:
@@ -85,7 +87,7 @@ def main():
 
         if not dry_run:
             print(f"Server response code: \n{r.status_code}.", file=logf)
-            print(f"Server response : \n{r.text}.", file=logf)
+            print(f"Server response : \n{json.dumps(r.json(), indent=4)}.", file=logf)
 
         if dry_run:
             print(f"### This was just a dry run test. No data was deposited ###", file=logf)
