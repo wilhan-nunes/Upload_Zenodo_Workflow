@@ -1,0 +1,135 @@
+workflowname: zenodo_task_result_upload_workflow
+workflowdescription: "Upload task result files to Zenodo"
+workflowlongdescription: "This workflow allows users to deposit datasets on Zenodo."
+workflowversion: "2024-12-16"
+workflowfile: nf_workflow.nf
+workflowautohide: false
+adminonly: false
+
+parameterlist:
+  - displayname: Dry-run
+    paramtype: select
+    nf_paramname: dry_run
+    formvalue: "true"
+    options:
+      - value: "true"
+        display: "true"
+      - value: "false"
+        display: "false"
+    tooltip: |
+      Dry-run for testing purposes. True: skip deposition step; False: complete workflow
+
+  - displayname: Job Task ID (GNPS2)
+    paramtype: text
+    nf_paramname: uploaded_task_id
+    formplaceholder: "Task ID for the job you want to upload"
+    tooltip: | 
+      Paste here the TASK ID for the job which the results you want to upload to Zenodo.
+
+  - displayname: Access Token
+    paramtype: text
+    nf_paramname: access_token
+    formplaceholder: "your Zenodo account Access Token"
+    tooltip: | 
+      This is a Zenodo access token needed to grant the workflow access to deposit data on your account. 
+      See Zenodo's documentation for more details on how to create one.
+
+  - displayname: Title of Deposition
+    paramtype: text
+    nf_paramname: metadata.title
+    formplaceholder: "Enter the title of your deposition"
+    formvalue: ""
+    tooltip: | 
+      The title of your deposition. This is a required field.
+
+  - displayname: Creators
+    paramtype: textarea
+    nf_paramname: metadata.creators
+    formplaceholder: "Enter creators and affiliations (in this order) separated by semicolon (e.g., Doe, John; University A; Doe, Jane; University B)"
+    formvalue: ""
+    tooltip: |
+      List of authors for the deposition, including name and affiliation. Example: Doe, John; University A; Doe, Jane; University B; Smith, Alice; University C; Johnson, Bob; University D; Lee, Emily; University E; Brown, Charlie; University F
+
+
+  - displayname: Description
+    paramtype: textarea
+    nf_paramname: metadata.description
+    formplaceholder: "Enter a brief description of your deposition"
+    formvalue: ""
+    tooltip: |
+      A brief description or abstract of the dataset or workflow.
+
+  - displayname: Keywords
+    paramtype: text
+    nf_paramname: metadata.keywords
+    formplaceholder: "Enter keywords separated by semicolons"
+    formvalue: ""
+    tooltip: |
+      A list of keywords describing the deposition.
+
+  - displayname: Upload Type
+    paramtype: select
+    nf_paramname: metadata.upload_type
+    formvalue: "dataset"
+    options:
+      - value: "dataset"
+        display: "Dataset"
+    tooltip: |
+      Type of upload (e.g., dataset, publication, software). Only dataset currently available
+
+  - displayname: Version
+    paramtype: text
+    nf_paramname: metadata.version
+    formplaceholder: "Enter the version of your deposition (e.g., 1.0)"
+    formvalue: ""
+    tooltip: |
+      Version of the deposition.
+
+  - displayname: Access Rights
+    paramtype: select
+    nf_paramname: metadata.access_right
+    formvalue: "open"
+    options:
+      - value: "open"
+        display: "Open"
+      - value: "embargoed"
+        display: "Embargoed"
+      - value: "restricted"
+        display: "Restricted"
+      - value: "closed"
+        display: "Closed"
+    tooltip: |
+      Access rights for the deposition (e.g., open, embargoed, restricted).
+
+  - displayname: License
+    paramtype: select
+    nf_paramname: metadata.license
+    formvalue: ""
+    options:
+      - value: "cc-zero"
+        display: "Default (CC-Zero for datasets)"
+      - value: "CC-BY-4.0"
+        display: "Creative Commons Attribution 4.0"
+      - value: "MIT"
+        display: "MIT License"
+      - value: "GPL-3.0"
+        display: "GNU General Public License 3.0"
+    tooltip: |
+      License under which the content is shared. Use SPDX identifiers. (required if access is 'open' or 'embargoed').
+
+  - displayname: Embargo Date
+    paramtype: text
+    nf_paramname: metadata.embargo_date
+    formplaceholder: "Enter embargo date (YYYY-MM-DD) if applicable"
+    formvalue: ""
+    tooltip: |
+      If access is embargoed, specify the embargo date.
+
+  - displayname: Notes
+    paramtype: textarea
+    nf_paramname: metadata.notes
+    formplaceholder: "Enter any additional notes about your deposition"
+    formvalue: ""
+    tooltip: |
+      Additional notes about the deposition.
+
