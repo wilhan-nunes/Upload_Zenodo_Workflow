@@ -3,8 +3,16 @@ import argparse
 from dotenv import dotenv_values
 import json
 import yaml
-import datetime
+import os
+import logging
 
+def setup_logging(log_file):
+    logging.basicConfig(
+        filename=log_file,
+        level=logging.INFO,
+        format='%(asctime)s - [%(levelname)s]: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
 
 def main():
     parser = argparse.ArgumentParser(description='Upload task files to Zenodo')
@@ -13,6 +21,8 @@ def main():
     parser.add_argument('output_deposition_log', help='Path to output log file')
 
     args = parser.parse_args()
+
+    setup_logging(args.output_deposition_log)
 
     parameters_json = yaml.safe_load(open(args.input_yaml_params))
     config = dotenv_values()
@@ -60,6 +70,10 @@ def main():
         headers = {"Content-Type": "application/json"}
         params = {'access_token': ACCESS_TOKEN}
         r = requests.post('https://zenodo.org/api/deposit/depositions', params=params, json={}, headers=headers)
+        if r.status_code == 201:
+            logging.info(f"Empty deposition created successfully.")
+        else:
+            logging.error(f"Error creating empty deposition. Status code: {r.status_code}")
         r.raise_for_status()
 
         new_deposition_json = r.json()
@@ -69,6 +83,10 @@ def main():
         # Uploading the file
         with open(path, "rb") as fp:
             r = requests.put(f'{bucket_url}/{path}', data=fp, params=params)
+            if r.status_code == 201:
+                logging.info(f"File uploaded successfully.")
+            else:
+                logging.error(f"Error uploading file. Status code: {r.status_code}")
             r.raise_for_status()
 
         # Sending METADATA to the server
@@ -76,22 +94,24 @@ def main():
                          params={'access_token': ACCESS_TOKEN},
                          data=json.dumps(data),
                          headers=headers)
+        if r.status_code == 200:
+            logging.info(f"Metadata sent successfully to the server.")
+        else:
+            logging.error(f"Error sending metadata to the server. Status code: {r.status_code}")
         r.raise_for_status()
 
-    # logging the results to make it easier to debug
-    with open(args.output_deposition_log, 'w') as logf:
-        current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        print(f"Log generated on: {current_time}", file=logf)
-        print(f"Deposition file: {path}.", file=logf)
-        print(f"Deposition metadata sent to Zenodo: \n{json.dumps(data, indent=4)}.", file=logf)
+        # logging.info(f"Server response code: {r.status_code}")
+        # logging.info(f"Server response: {json.dumps(r.json(), indent=4)}")
 
-        if not dry_run:
-            print(f"Server response code: \n{r.status_code}.", file=logf)
-            print(f"Server response : \n{json.dumps(r.json(), indent=4)}.", file=logf)
+    if dry_run:
+        logging.info("### This was just a dry run test. No data was deposited ###")
 
-        if dry_run:
-            print(f"### This was just a dry run test. No data was deposited ###", file=logf)
-
+    size_bytes = os.path.getsize(path)
+    file_size = f"{size_bytes / 1024 ** 2:.2f} MB." if size_bytes < 1024**3 else f"{size_bytes / 1024**3:.2f} GB"
+    logging.info(f"Deposited file: {path}")
+    logging.info(f"Deposited file size: {file_size}")
+    logging.info(f"File generated from task ID: {parameters_json['uploaded_task_id']}")
+    logging.info(f"Deposition metadata sent to Zenodo: {json.dumps(data, indent=4)}")
 
 if __name__ == '__main__':
     main()

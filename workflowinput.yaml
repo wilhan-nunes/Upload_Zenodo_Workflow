@@ -7,6 +7,9 @@ workflowautohide: false
 adminonly: false
 
 parameterlist:
+  - displayname: Deposition Configuration
+    paramtype: section
+
   - displayname: Dry-run
     paramtype: select
     nf_paramname: dry_run
@@ -26,13 +29,16 @@ parameterlist:
     tooltip: | 
       Paste here the TASK ID for the job which the results you want to upload to Zenodo.
 
-  - displayname: Access Token
-    paramtype: text
-    nf_paramname: access_token
-    formplaceholder: "your Zenodo account Access Token"
-    tooltip: | 
-      This is a Zenodo access token needed to grant the workflow access to deposit data on your account. 
-      See Zenodo's documentation for more details on how to create one.
+  - displayname: Deposition details
+    paramtype: section
+
+#  - displayname: Access Token
+#    paramtype: text
+#    nf_paramname: access_token
+#    formplaceholder: "your Zenodo account Access Token"
+#    tooltip: |
+#      This is a Zenodo access token needed to grant the workflow access to deposit data on your account.
+#      See Zenodo's documentation for more details on how to create one.
 
   - displayname: Title of Deposition
     paramtype: text
