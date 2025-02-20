@@ -14,6 +14,33 @@ def setup_logging(log_file):
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
+
+def delete_deposited_files(deposition_id, params):
+    # Delete files already deposited
+    files_url = f'https://sandbox.zenodo.org/api/deposit/depositions/{deposition_id}/files'
+    files_response = requests.get(files_url, params=params)
+    files_response.raise_for_status()
+    files = files_response.json()
+    for file in files:
+        delete_url = f'https://sandbox.zenodo.org/api/deposit/depositions/{deposition_id}/files/{file["id"]}'
+        delete_response = requests.delete(delete_url, params=params)
+        delete_response.raise_for_status()
+
+
+def create_new_version(deposition_id, access_token):
+    url = f'https://sandbox.zenodo.org/api/deposit/depositions/{deposition_id}/actions/newversion'
+    headers = {"Content-Type": "application/json"}
+    params = {'access_token': access_token}
+    response = requests.post(url, params=params, headers=headers)
+    response.raise_for_status()
+    new_version = response.json()
+    new_deposition_id = new_version['links']['latest_draft'].split('/')[-1]
+
+    delete_deposited_files(new_deposition_id, params)
+
+    return new_deposition_id, new_version['links']['bucket']
+
+
 def main():
     parser = argparse.ArgumentParser(description='Upload task files to Zenodo')
     parser.add_argument('input_yaml_params', help='YAML containing the deposition parameters')
@@ -25,16 +52,13 @@ def main():
     setup_logging(args.output_deposition_log)
 
     parameters_json = yaml.safe_load(open(args.input_yaml_params))
+    # SERVER_URL = 'https://zenodo.org/api/deposit/depositions'
+    SERVER_URL = 'https://sandbox.zenodo.org/api/deposit/depositions' #SANDBOX
     config = dotenv_values()
 
-    # Workaround to allow multiple creators and affiliations as a txt input string
-    creators_string = parameters_json['metadata.creators']
-    names = [name.strip() for i, name in enumerate(creators_string.split(';')) if i % 2 == 0]
-    affiliations = [affiliation.strip() for i, affiliation in enumerate(creators_string.split(';')) if i % 2 == 1]
-    creators_list = [{'name': name, 'affiliation': affiliation} for name, affiliation in
-                     dict(zip(names, affiliations)).items()]
-
-    # metadata creation
+    creators_list = [{'name': name.strip(), 'affiliation': affiliation.strip()}
+                     for name, affiliation in zip(parameters_json['metadata.creators'].split(';')[::2],
+                                                  parameters_json['metadata.creators'].split(';')[1::2])]
     keywords = [keyword.strip() for keyword in parameters_json["metadata.keywords"].split(";")]
 
     access_right = parameters_json["metadata.access_right"]
@@ -62,23 +86,29 @@ def main():
     }
 
     dry_run = True if parameters_json['dry_run'] == 'true' else False
+    new_version = True if parameters_json.get('zenodo_deposition_id') != '' else False
     path = args.input_upload_file
 
     if not dry_run:
         # Create a new empty upload
-        ACCESS_TOKEN = parameters_json['access_token']
+        ACCESS_TOKEN = config['TOKEN']
         headers = {"Content-Type": "application/json"}
         params = {'access_token': ACCESS_TOKEN}
-        r = requests.post('https://zenodo.org/api/deposit/depositions', params=params, json={}, headers=headers)
-        if r.status_code == 201:
-            logging.info(f"Empty deposition created successfully.")
+        if new_version:
+            deposition_id, bucket_url = create_new_version(parameters_json['zenodo_deposition_id'], ACCESS_TOKEN)
+            logging.info(f"Zenodo deposition ID (new version): {deposition_id}")
         else:
-            logging.error(f"Error creating empty deposition. Status code: {r.status_code}")
-        r.raise_for_status()
+            r = requests.post(SERVER_URL, params=params, json={}, headers=headers)
+            if r.status_code == 201:
+                logging.info(f"Empty deposition created successfully.")
+            else:
+                logging.error(f"Error creating empty deposition. Status code: {r.status_code}")
+            r.raise_for_status()
 
-        new_deposition_json = r.json()
-        deposition_id = new_deposition_json['id']
-        bucket_url = new_deposition_json["links"]["bucket"]
+            new_deposition_json = r.json()
+            deposition_id = new_deposition_json['id']
+            bucket_url = new_deposition_json["links"]["bucket"]
+            logging.info(f"Zenodo deposition ID: {deposition_id}")
 
         # Uploading the file
         with open(path, "rb") as fp:
@@ -90,7 +120,7 @@ def main():
             r.raise_for_status()
 
         # Sending METADATA to the server
-        r = requests.put(f'https://zenodo.org/api/deposit/depositions/{deposition_id}',
+        r = requests.put(f'{SERVER_URL}/{deposition_id}',
                          params={'access_token': ACCESS_TOKEN},
                          data=json.dumps(data),
                          headers=headers)
@@ -98,6 +128,15 @@ def main():
             logging.info(f"Metadata sent successfully to the server.")
         else:
             logging.error(f"Error sending metadata to the server. Status code: {r.status_code}")
+        r.raise_for_status()
+
+        # Publish the deposition
+        r = requests.post(f'{SERVER_URL}/{deposition_id}/actions/publish',
+                          params={'access_token': ACCESS_TOKEN})
+        if r.status_code == 202:
+            logging.info(f"Deposition published successfully.")
+        else:
+            logging.error(f"Error publishing deposition. Status code: {r.status_code}")
         r.raise_for_status()
 
         # logging.info(f"Server response code: {r.status_code}")
@@ -112,6 +151,7 @@ def main():
     logging.info(f"Deposited file size: {file_size}")
     logging.info(f"File generated from task ID: {parameters_json['uploaded_task_id']}")
     logging.info(f"Deposition metadata sent to Zenodo: {json.dumps(data, indent=4)}")
+
 
 if __name__ == '__main__':
     main()

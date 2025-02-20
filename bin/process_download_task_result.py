@@ -6,7 +6,6 @@ import yaml
 
 def download_gnps2_results(task, outputfile):
     url = f'https://gnps2.org/taskzip?task={task}'
-    # session = requests.Session()
     with requests.get(url, stream=True) as response:
         response.raise_for_status()
         total_size = int(response.headers.get('content-length', 0))
