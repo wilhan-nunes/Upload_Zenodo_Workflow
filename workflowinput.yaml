@@ -1,7 +1,7 @@
 workflowname: zenodo_task_result_upload_workflow
 workflowdescription: "Upload task result files to Zenodo"
-workflowlongdescription: "This workflow allows users to deposit datasets on Zenodo."
-workflowversion: "2024-12-16"
+workflowlongdescription: "This workflow allows users to deposit GNPS2 job files on Zenodo."
+workflowversion: "2024.12.16"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -22,6 +22,22 @@ parameterlist:
     tooltip: |
       Dry-run for testing purposes. True: skip deposition step; False: complete workflow
 
+  - displayname: Access Token (Optional)
+    paramtype: text
+    nf_paramname: access_token
+    formplaceholder: "Enter your Zenodo access token"
+    formvalue: ""
+    tooltip: |
+      Your Zenodo access token. This is a required field. IF not entered, the GNPS2 account will be used to publish the dataset.
+
+  - displayname: Update Existing Zenodo Deposition ID
+    paramtype: text
+    nf_paramname: zenodo_deposition_id
+    formplaceholder: "Enter an existing Zenodo deposition ID"
+    formvalue: ""
+    tooltip: |
+      If you are trying to upload a new version of an existing deposition, please enter the deposition ID here and update the version metadata below.
+
   - displayname: Job Task ID (GNPS2)
     paramtype: text
     nf_paramname: uploaded_task_id
@@ -32,18 +48,10 @@ parameterlist:
   - displayname: Deposition details
     paramtype: section
 
-#  - displayname: Access Token
-#    paramtype: text
-#    nf_paramname: access_token
-#    formplaceholder: "your Zenodo account Access Token"
-#    tooltip: |
-#      This is a Zenodo access token needed to grant the workflow access to deposit data on your account.
-#      See Zenodo's documentation for more details on how to create one.
-
-  - displayname: Title of Deposition
+  - displayname: Title of Deposition (Required)
     paramtype: text
     nf_paramname: metadata.title
-    formplaceholder: "Enter the title of your deposition"
+    formplaceholder: "Enter the title of your deposition (Required)"
     formvalue: ""
     tooltip: | 
       The title of your deposition. This is a required field.
@@ -57,13 +65,13 @@ parameterlist:
       List of authors for the deposition, including name and affiliation. Example: Doe, John; University A; Doe, Jane; University B; Smith, Alice; University C; Johnson, Bob; University D; Lee, Emily; University E; Brown, Charlie; University F
 
 
-  - displayname: Description
+  - displayname: Description (Required)
     paramtype: textarea
     nf_paramname: metadata.description
-    formplaceholder: "Enter a brief description of your deposition"
+    formplaceholder: "Enter a brief description of your deposition (Required)"
     formvalue: ""
     tooltip: |
-      A brief description or abstract of the dataset or workflow.
+      A brief description or abstract of the dataset or workflow. MANDATORY for Zenodo deposition.
 
   - displayname: Keywords
     paramtype: text
