@@ -94,8 +94,9 @@ def create_new_version(deposition_id, access_token):
 
 
 def publish_deposition(deposition_id, access_token):
+    params = {'access_token': access_token}
     r = requests.post(f'{SERVER_URL}/{deposition_id}/actions/publish',
-                      params={'access_token': access_token})
+                      params=params)
     if r.status_code == 202:
         logging.info(f"Deposition published successfully.")
     else:
@@ -115,7 +116,7 @@ def main():
 
     parameters_json = yaml.safe_load(open(args.input_yaml_params))
     config = dotenv_values()
-    ACCESS_TOKEN = config['TOKEN']
+    ACCESS_TOKEN = config['TOKEN'] if 'TOKEN' in config else parameters_json.get("access_token")
 
     # Extracting metadata from the parameters
     creators_list = [{'name': name.strip(), 'affiliation': affiliation.strip()}
@@ -132,7 +133,7 @@ def main():
     elif access_right == "open" and embargo_date:
         raise ValueError("The 'embargo_date' must be empty when 'access_right' is set to 'open'.")
 
-    gnps2_task_url = f"https://gnps2.org/status?task={parameters_json["uploaded_task_id"]}"
+    gnps2_task_url = f"https://gnps2.org/status?task={parameters_json['uploaded_task_id']}"
     deposition_notes = f'{parameters_json["metadata.notes"]}; <a href="{gnps2_task_url}">GNPS2 Task</a>' \
         if parameters_json[
                "metadata.notes"] != '' else f'<a href="{gnps2_task_url}">GNPS2 Task</a>'
