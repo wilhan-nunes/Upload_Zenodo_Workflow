@@ -1,7 +1,7 @@
 workflowname: zenodo_task_result_upload_workflow
 workflowdescription: "Upload task result files to Zenodo"
-workflowlongdescription: "This workflow allows users to deposit GNPS2 job files on Zenodo."
-workflowversion: "2024.12.16"
+workflowlongdescription: "This workflow allows users to deposit GNPS1 and GNPS2 job files on Zenodo."
+workflowversion: "2024.12.25"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -38,11 +38,23 @@ parameterlist:
     tooltip: |
       If you are trying to upload a new version of an existing deposition, please enter the deposition ID here and update the version metadata below.
 
-  - displayname: Job Task ID (GNPS2)
+  - displayname: Type
+    paramtype: select
+    nf_paramname: datasource
+    formvalue: "GNPS2"
+    options:
+      - value: "GNPS1"
+        display: "GNPS1"
+      - value: "GNPS2"
+        display: "GNPS2"
+    tooltip: "You need to select where the task ID is coming from."
+
+
+  - displayname: Job Task ID
     paramtype: text
     nf_paramname: uploaded_task_id
-    formplaceholder: "Task ID for the job you want to upload"
-    tooltip: | 
+    formplaceholder: "Task ID for the job you want to upload."
+    tooltip: |
       Paste here the TASK ID for the job which the results you want to upload to Zenodo.
 
   - displayname: Deposition details
@@ -53,7 +65,7 @@ parameterlist:
     nf_paramname: metadata.title
     formplaceholder: "Enter the title of your deposition (Required)"
     formvalue: ""
-    tooltip: | 
+    tooltip: |
       The title of your deposition. This is a required field.
 
   - displayname: Creators

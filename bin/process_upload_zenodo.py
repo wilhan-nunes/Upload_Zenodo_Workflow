@@ -123,7 +123,7 @@ def main():
     creators_list = [{'name': name.strip(), 'affiliation': affiliation.strip()}
                      for name, affiliation in zip(parameters_json['metadata.creators'].split(';')[::2],
                                                   parameters_json['metadata.creators'].split(';')[1::2])]
-    keywords = [keyword.strip() for keyword in parameters_json["metadata.keywords"].split(";")]
+    keywords = [keyword.strip() for keyword in parameters_json["metadata.keywords"].split(";") if keyword.strip()]
 
     access_right = parameters_json["metadata.access_right"]
     embargo_date = parameters_json["metadata.embargo_date"]
@@ -134,10 +134,14 @@ def main():
     elif access_right == "open" and embargo_date:
         raise ValueError("The 'embargo_date' must be empty when 'access_right' is set to 'open'.")
 
-    gnps2_task_url = f"https://gnps2.org/status?task={parameters_json['uploaded_task_id']}"
-    deposition_notes = f'{parameters_json["metadata.notes"]}; <a href="{gnps2_task_url}">GNPS2 Task</a>' \
+    task_id = parameters_json['uploaded_task_id']
+    task_url = f"https://gnps.ucsd.edu/ProteoSAFe/status.jsp?task={task_id}" \
+        if parameters_json.get('datasource') == 'true' else f"https://gnps2.org/status?task={task_id}"
+
+    task_url_string = f'<a href="{task_url}">GNPS Task link</a>'
+    deposition_notes = f'{parameters_json["metadata.notes"]}; {task_url_string}' \
         if parameters_json[
-               "metadata.notes"] != '' else f'<a href="{gnps2_task_url}">GNPS2 Task</a>'
+               "metadata.notes"] != '' else f'{task_url_string}'
 
     data = {
         "metadata": {
@@ -152,7 +156,7 @@ def main():
             "embargo_date": embargo_date,
             "notes": deposition_notes,
             "related_identifiers": [
-                {"identifier": gnps2_task_url,
+                {"identifier": task_url,
                  "relation": "isSupplementTo",
                  "resource_type": "dataset"}]
         }
