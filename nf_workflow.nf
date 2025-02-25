@@ -17,11 +17,11 @@ process downloadTaskResult {
     path input_params
 
     output:
-    path "task_result.zip", emit: task_file
+    path "task_result.tar", emit: task_file
 
     script:
     """
-    python $TOOL_FOLDER/process_download_task_result.py $input_params task_result.zip
+    python $TOOL_FOLDER/process_download_task_result.py $input_params task_result.tar
     """
 }
 
