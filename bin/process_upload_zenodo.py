@@ -116,7 +116,8 @@ def main():
 
     parameters_json = yaml.safe_load(open(args.input_yaml_params))
     config = dotenv_values()
-    ACCESS_TOKEN = config['TOKEN'] if 'TOKEN' in config else parameters_json.get("access_token")
+    user_token = parameters_json.get("access_token")
+    ACCESS_TOKEN = user_token if user_token != '' else config.get("TOKEN")
 
     # Extracting metadata from the parameters
     creators_list = [{'name': name.strip(), 'affiliation': affiliation.strip()}
@@ -179,7 +180,7 @@ def main():
         publish_deposition(deposition_id, ACCESS_TOKEN)
 
     if dry_run:
-        logging.info("### This was just a dry run test. No data was deposited ###")
+        logging.warning("### This was just a dry run test. No data was deposited ###")
 
     size_bytes = os.path.getsize(path)
     file_size = f"{size_bytes / 1024 ** 2:.2f} MB." if size_bytes < 1024 ** 3 else f"{size_bytes / 1024 ** 3:.2f} GB"
