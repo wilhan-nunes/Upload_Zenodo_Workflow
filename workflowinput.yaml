@@ -13,7 +13,7 @@ parameterlist:
   - displayname: Dry-run
     paramtype: select
     nf_paramname: dry_run
-    formvalue: "true"
+    formvalue: "false"
     options:
       - value: "true"
         display: "true"
@@ -28,7 +28,7 @@ parameterlist:
     formplaceholder: "Enter your Zenodo access token"
     formvalue: ""
     tooltip: |
-      Your Zenodo access token. This is a required field. IF not entered, the GNPS2 account will be used to publish the dataset.
+      Your Zenodo access token. If not entered, the GNPS2 account will be used to publish the dataset.
 
   - displayname: Update Existing Zenodo Deposition ID
     paramtype: text
